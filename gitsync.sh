@@ -105,25 +105,33 @@ shift $((OPTIND - 1))
 
 depth_default=3
 
+# Main script logic
+case "$1" in
+    "install")
+        cp "$0" "$HOME/.local/bin/gitsync"
+        chmod +x "$HOME/.local/bin/gitsync"
+        echo "GitSync installed successfully"
+        ;;
+    *)
+        # target directory to run the script. Is either the first argument or defaults to the current directory
+        target_dir="${1:-.}"
 
-# target directory to run the script. Is either the first argument or defaults to the current directory
-target_dir="${1:-.}"
+        # maximim depth to search for repositories in subdirectories. Is either the second argument or defaults to 2
+        max_depth="${2:-${depth_default}}"
+        if [[ -z "$max_depth" || ! "$max_depth" =~ ^[0-9]+$ ]]; then
+            max_depth=$depth_default
+            echo -e "Using default value of ${BLUE}\`$max_depth\`${RESET} for max_depth"
+        fi
 
-# maximim depth to search for repositories in subdirectories. Is either the second argument or defaults to 2
-max_depth="${2:-${depth_default}}"
-if [[ -z "$max_depth" || ! "$max_depth" =~ ^[0-9]+$ ]]; then
-    max_depth=$depth_default
-    echo -e "Using default value of ${BLUE}\`$max_depth\`${RESET} for max_depth"
-fi
+        # logging
+        echo -e "Syncing all repositories inside \`${BLUE}$target_dir${RESET}\` with maximum depth of ${CYAN}$max_depth${RESET}."
 
-# logging
-echo -e "Syncing all repositories inside \`${BLUE}$target_dir${RESET}\` with maximum depth of ${CYAN}$max_depth${RESET}."
-
-# start recursion
-check_for_git_repos "$target_dir" "$max_depth" 1
-
-# Print the list of Git repositories and their update status
-echo -e "\n${BLUE}Report:${RESET}"
-for item in "${REPORT_LIST[@]}"; do
-    echo -e "$item"
-done
+        # start recursion
+        check_for_git_repos "$target_dir" "$max_depth" 1
+        # Print the list of Git repositories and their update status
+        echo -e "\n${BLUE}Report:${RESET}"
+        for item in "${REPORT_LIST[@]}"; do
+            echo -e "$item"
+        done
+        ;;
+esac
