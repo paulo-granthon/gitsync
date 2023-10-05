@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# boolean that identifies a "dry_run" where no fetch and pull commands are executed
+dry=false
+
 # defining terminal colors
 RESET='\033[0m'
 RED='\033[0;31m'
@@ -21,27 +24,33 @@ function sync_dir {
         echo -e "Depth ${BLUE}$depth${RESET}: ${CYAN}Updating git repository at \`${GREEN}$dir${BLUE}\`...${RESET}"
         cd "$dir" || exit
 
-        # execute fetch and pull
-        git fetch --all
-        pull_output=$(git pull 2>&1 | tee /dev/tty) # Capture the output of git pull
+        if [ "$dry" = true ]; then
+            echo -e "${PURPLE} - Dry run${RESET}: Skipping actual fetch and pull for repository ${GREEN}\`$dir\`${RESET}"
+            REPORT_LIST+=("${YELLOW}\`$dir\`${RESET}: Is a git repository")
+        else
 
-        # match output
-        case "$pull_output" in
+            # execute fetch and pull
+            git fetch --all
+            pull_output=$(git pull 2>&1 | tee /dev/tty) # Capture the output of git pull
 
-            # contains "Fast-forward" as a substring = repo updated
-            *Fast-forward*)
-                REPORT_LIST+=("${GREEN}$dir${RESET}: Updated")
-                ;;
+            # match output
+            case "$pull_output" in
 
-            # otherwise = not updated
-            *)
-                REPORT_LIST+=("${YELLOW}$dir${RESET}: Not Updated")
-                ;;
-        esac
+                # contains "Fast-forward" as a substring = repo updated
+                *Fast-forward*)
+                    REPORT_LIST+=("${GREEN}\`$dir\`${RESET}: Updated")
+                    ;;
+
+                # otherwise = not updated
+                *)
+                    REPORT_LIST+=("${YELLOW}\`$dir\`${RESET}: Not Updated")
+                    ;;
+            esac
 
 
-        # cd out of dir and restore default output
-        cd - > /dev/null 2>&1 || exit
+            # cd out of dir and restore default output
+            cd - > /dev/null 2>&1 || exit
+        fi
 
         return 0
     fi
@@ -78,11 +87,34 @@ function check_for_git_repos {
 }
 
 
+# Parse options using getopts
+while getopts "d" opt; do
+    case "$opt" in
+        d)
+            dry=true
+            ;;
+        \?)
+            echo "Invalid option: -$OPTARG"
+            # usage
+            ;;
+    esac
+done
+
+shift $((OPTIND - 1))
+
+
+depth_default=3
+
+
 # target directory to run the script. Is either the first argument or defaults to the current directory
 target_dir="${1:-.}"
 
 # maximim depth to search for repositories in subdirectories. Is either the second argument or defaults to 2
-max_depth="${2:-3}"
+max_depth="${2:-${depth_default}}"
+if [[ -z "$max_depth" || ! "$max_depth" =~ ^[0-9]+$ ]]; then
+    max_depth=$depth_default
+    echo -e "Using default value of ${BLUE}\`$max_depth\`${RESET} for max_depth"
+fi
 
 # logging
 echo -e "Syncing all repositories inside \`${BLUE}$target_dir${RESET}\` with maximum depth of ${CYAN}$max_depth${RESET}."
