@@ -85,6 +85,12 @@ function check_for_git_repos {
     done
 }
 
+# Function to add a directory to the ignore list
+function add_to_ignore_list {
+    local dir="$1"
+    echo "$dir" >> "$HOME/.gitsync_ignore"
+    echo "Added \`$dir\` to the GitSync ignore list."
+}
 
 # Parse options using getopts
 while getopts "d" opt; do
