@@ -19,12 +19,6 @@ declare -a REPORT_LIST
 function sync_dir {
     local dir="$1"
 
-    # Check if the directory is in the ignore list
-    if grep -Fxq "$dir" "$HOME/.gitsync_ignore"; then
-        echo -e "Directory ${CYAN}\`${GREEN}$dir${CYAN}\` is in the GitSync ignore list. Skipping.${RESET}"
-        return 0
-    fi
-
     # If contains a .git directory inside, it's a git repository
     if [ -d "$dir/.git" ]; then
         echo -e "Depth ${BLUE}$depth${RESET}: ${CYAN}Updating git repository at \`${GREEN}$dir${BLUE}\`...${RESET}"
@@ -72,6 +66,10 @@ function check_for_git_repos {
     # For each dir in base_dir
     for dir in $(find "$base_dir" -maxdepth 1 -mindepth 1 -type d); do
 
+        if is_directory_ignored "$dir"; then
+            continue
+        fi
+
         # Call sync_dir to try syncing the directory
         sync_dir "$dir"
 
@@ -89,6 +87,19 @@ function check_for_git_repos {
             fi
         fi
     done
+}
+
+# Function to check if a directory is in the ignore list
+function is_directory_ignored {
+    local dir="$1"
+
+    while read -r pattern; do
+        if [[ "$dir" == *"$pattern"* ]]; then
+            return 0  # Directory is ignored
+        fi
+    done < "$HOME/.gitsync_ignore"
+
+    return 1  # Directory is not ignored
 }
 
 # Function to add a directory to the ignore list
