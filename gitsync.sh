@@ -92,6 +92,13 @@ function add_to_ignore_list {
     echo "Added \`$dir\` to the GitSync ignore list."
 }
 
+# Function to display the current ignore list
+function display_ignore_list {
+    echo "GitSync Ignore List:"
+    cat "$HOME/.gitsync_ignore"
+}
+
+
 # Parse options using getopts
 while getopts "d" opt; do
     case "$opt" in
