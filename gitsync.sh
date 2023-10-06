@@ -19,7 +19,13 @@ declare -a REPORT_LIST
 function sync_dir {
     local dir="$1"
 
-    # if contains a .git directory inside, it's a git repository
+    # Check if the directory is in the ignore list
+    if grep -Fxq "$dir" "$HOME/.gitsync_ignore"; then
+        echo -e "Directory ${CYAN}\`${GREEN}$dir${CYAN}\` is in the GitSync ignore list. Skipping.${RESET}"
+        return 0
+    fi
+
+    # If contains a .git directory inside, it's a git repository
     if [ -d "$dir/.git" ]; then
         echo -e "Depth ${BLUE}$depth${RESET}: ${CYAN}Updating git repository at \`${GREEN}$dir${BLUE}\`...${RESET}"
         cd "$dir" || exit
