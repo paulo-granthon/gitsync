@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# boolean that identifies a "dry_run" where no fetch and pull commands are executed
+# Boolean that identifies a "dry_run" where no fetch and pull commands are executed
 dry=false
 
-# defining terminal colors
+# Defining terminal colors
 RESET='\033[0m'
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -29,24 +29,23 @@ function sync_dir {
             REPORT_LIST+=("${YELLOW}\`$dir\`${RESET}: Is a git repository")
         else
 
-            # execute fetch and pull
+            # Execute fetch and pull
             git fetch --all
             pull_output=$(git pull 2>&1 | tee /dev/tty) # Capture the output of git pull
 
-            # match output
+            # Match output
             case "$pull_output" in
 
-                # contains "Fast-forward" as a substring = repo updated
+                # Contains "Fast-forward" as a substring = repo updated
                 *Fast-forward*)
                     REPORT_LIST+=("${GREEN}\`$dir\`${RESET}: Updated")
                     ;;
 
-                # otherwise = not updated
+                # Otherwise = not updated
                 *)
                     REPORT_LIST+=("${YELLOW}\`$dir\`${RESET}: Not Updated")
                     ;;
             esac
-
 
             # cd out of dir and restore default output
             cd - > /dev/null 2>&1 || exit
@@ -64,21 +63,21 @@ function check_for_git_repos {
     local max_depth="$2"
     local depth="$3"
 
-    # for each dir in base_dir
+    # For each dir in base_dir
     for dir in $(find "$base_dir" -maxdepth 1 -mindepth 1 -type d); do
 
-        # call sync_dir to try syncing the directory
+        # Call sync_dir to try syncing the directory
         sync_dir "$dir"
 
-        # if sync_dir returns 1, directory is not a git repo
+        # If sync_dir returns 1, directory is not a git repo
         if [ $? -eq 1 ]; then
 
-            # max_depth not reached yet, check subdirectories of $dir
+            # Max_depth not reached yet, check subdirectories of $dir
             if [ "$depth" -lt "$max_depth" ]; then
                 echo -e "Depth ${BLUE}$depth${RESET}: \`${RED}$dir${RESET}\` ${YELLOW}is not a git repository, checking subdirectories.${RESET}"
                 check_for_git_repos "$dir" "$max_depth" "$((depth + 1))"
 
-            # max_depth reached, exit
+            # Max_depth reached, exit
             else
                 echo -e "Depth ${BLUE}$depth${RESET}: \`${RED}$dir${RESET}\` ${PURPLE}is not a git repository.${RESET}"
             fi
@@ -113,20 +112,20 @@ case "$1" in
         echo "GitSync installed successfully"
         ;;
     *)
-        # target directory to run the script. Is either the first argument or defaults to the current directory
+        # Target directory to run the script. Is either the first argument or defaults to the current directory
         target_dir="${1:-.}"
 
-        # maximim depth to search for repositories in subdirectories. Is either the second argument or defaults to 2
+        # Maximim depth to search for repositories in subdirectories. Is either the second argument or defaults to 2
         max_depth="${2:-${depth_default}}"
         if [[ -z "$max_depth" || ! "$max_depth" =~ ^[0-9]+$ ]]; then
             max_depth=$depth_default
             echo -e "Using default value of ${BLUE}\`$max_depth\`${RESET} for max_depth"
         fi
 
-        # logging
+        # Logging
         echo -e "Syncing all repositories inside \`${BLUE}$target_dir${RESET}\` with maximum depth of ${CYAN}$max_depth${RESET}."
 
-        # start recursion
+        # Start recursion
         check_for_git_repos "$target_dir" "$max_depth" 1
         # Print the list of Git repositories and their update status
         echo -e "\n${BLUE}Report:${RESET}"
