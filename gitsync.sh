@@ -135,6 +135,31 @@ case "$1" in
         chmod +x "$HOME/.local/bin/gitsync"
         echo "GitSync installed successfully"
         ;;
+    "ignore")
+        shift
+
+        if [ -z "$1" ]; then
+            echo "Usage: gitsync ignore [DIRECTORY | ls | rm DIRECTORY]"
+            exit 1
+        fi
+
+        case "$1" in
+            "rm")
+                shift
+                if [ -z "$1" ]; then
+                    echo "Usage: gitsync ignore remove DIRECTORY"
+                else
+                    remove_from_ignore_list "$1"
+                fi
+                ;;
+            "ls")
+                display_ignore_list
+                ;;
+            *)
+                add_to_ignore_list "$1"
+                ;;
+        esac
+        ;;
     *)
         # Target directory to run the script. Is either the first argument or defaults to the current directory
         target_dir="${1:-.}"
