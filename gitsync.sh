@@ -92,6 +92,17 @@ function add_to_ignore_list {
     echo "Added \`$dir\` to the GitSync ignore list."
 }
 
+# Function to remove a directory from the ignore list
+function remove_from_ignore_list {
+    local dir="$1"
+    if grep -qFx "$dir" "$HOME/.gitsync_ignore"; then
+        sed -i "/^$dir$/d" "$HOME/.gitsync_ignore"
+        echo "Removed \`$dir\` from the GitSync ignore list."
+    else
+        echo "\`$dir\` is not in the GitSync ignore list."
+    fi
+}
+
 # Function to display the current ignore list
 function display_ignore_list {
     echo "GitSync Ignore List:"
