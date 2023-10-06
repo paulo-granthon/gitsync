@@ -197,6 +197,12 @@ case "$1" in
 
         # Start recursion
         check_for_git_repos "$target_dir" "$max_depth" 1
+
+        if [ ${#REPORT_LIST[@]} -eq 0 ]; then
+            echo -e "${PURPLE}No eligible directories to verify.${RESET}"
+            exit 0
+        fi
+
         # Print the list of Git repositories and their update status
         echo -e "\n${BLUE}Report:${RESET}"
         for item in "${REPORT_LIST[@]}"; do
